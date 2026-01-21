@@ -1,0 +1,264 @@
+-- FVDEHUB MOBILE FULL - 卍 Toggle Fix
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+
+local function char() return player.Character or player.CharacterAdded:Wait() end
+
+-- ================= KEY SYSTEM =================
+local KEY = "fvde"
+local unlocked = false
+
+local keyGui = Instance.new("ScreenGui", player.PlayerGui)
+local keyFrame = Instance.new("Frame", keyGui)
+keyFrame.Size = UDim2.fromScale(0.35,0.2)
+keyFrame.Position = UDim2.fromScale(0.325,0.4)
+keyFrame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+
+local box = Instance.new("TextBox", keyFrame)
+box.Size = UDim2.fromScale(0.8,0.4)
+box.Position = UDim2.fromScale(0.1,0.2)
+box.PlaceholderText = "Enter Key"
+box.Text = ""
+box.TextScaled = true
+
+local enter = Instance.new("TextButton", keyFrame)
+enter.Size = UDim2.fromScale(0.8,0.25)
+enter.Position = UDim2.fromScale(0.1,0.65)
+enter.Text = "ENTER"
+
+enter.MouseButton1Click:Connect(function()
+	if box.Text == KEY then 
+        unlocked = true 
+        keyGui:Destroy()
+	else 
+        box.Text = "WRONG KEY" 
+	end
+end)
+
+repeat task.wait() until unlocked
+
+-- ================= GUI =================
+local gui = Instance.new("ScreenGui", player.PlayerGui)
+gui.ResetOnSpawn = false
+
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.fromScale(0.45,0.55)
+main.Position = UDim2.fromScale(0.275,0.2)
+main.BackgroundColor3 = Color3.fromRGB(15,15,15)
+main.Active = true
+main.Draggable = true
+
+-- メインUI開閉ボタン
+local toggleBtn = Instance.new("TextButton", gui)
+toggleBtn.Size = UDim2.fromScale(0.08,0.08)
+toggleBtn.Position = UDim2.fromScale(0.92,0.05)
+toggleBtn.Text = "☰"
+toggleBtn.TextScaled = true
+toggleBtn.BackgroundColor3 = Color3.fromRGB(40,40,40)
+toggleBtn.MouseButton1Click:Connect(function()
+	main.Visible = not main.Visible
+end)
+
+local title = Instance.new("TextLabel", main)
+title.Size = UDim2.fromScale(1,0.15)
+title.Text = "FVDEHUB"
+title.TextScaled = true
+title.BackgroundTransparency = 1
+
+task.spawn(function()
+	while true do
+		for h=0,1,0.02 do
+			title.TextColor3 = Color3.fromHSV(h,1,1)
+			task.wait(0.03)
+		end
+	end
+end)
+
+-- ================= Helper Functions =================
+local function makeBtn(txt,parent,pos)
+	local b = Instance.new("TextButton", parent)
+	b.Size = UDim2.fromScale(0.8,0.12)
+	b.Position = pos
+	b.Text = txt
+	return b
+end
+
+local function makeFrame()
+	local f = Instance.new("Frame", main)
+	f.Size = UDim2.fromScale(0.8,0.5)
+	f.Position = UDim2.fromScale(0.1,0.2)
+	f.BackgroundColor3 = Color3.fromRGB(25,25,25)
+	f.Visible = false
+	return f
+end
+
+-- ================= CATEGORY FRAMES =================
+local flyFrame = makeFrame()
+local noclipFrame = makeFrame()
+local xrayFrame = makeFrame()
+local jumpFrame = makeFrame()
+
+local allFrames = {flyFrame, noclipFrame, xrayFrame, jumpFrame}
+
+local function showFrame(f)
+	for _,frame in pairs(allFrames) do frame.Visible=false end
+	f.Visible=true
+end
+
+-- ================= 卍用Frame (GUI直下) =================
+local manjiFrame = Instance.new("Frame", gui)
+manjiFrame.Size = UDim2.fromScale(0.2,0.2)
+manjiFrame.Position = UDim2.fromScale(0.4,0.4)
+manjiFrame.BackgroundTransparency = 1
+manjiFrame.Visible = false
+
+local manjiLabel = Instance.new("TextLabel", manjiFrame)
+manjiLabel.Size = UDim2.fromScale(1,1)
+manjiLabel.Position = UDim2.fromScale(0,0)
+manjiLabel.Text = "卍"
+manjiLabel.TextScaled = true
+manjiLabel.TextColor3 = Color3.fromRGB(0,170,255)
+manjiLabel.BackgroundTransparency = 1
+
+task.spawn(function()
+	local r=0
+	while true do
+		if manjiFrame.Visible then
+			r+=2
+			manjiLabel.Rotation = r
+			manjiLabel.TextColor3 = Color3.fromHSV((tick()%5)/5,1,1)
+		end
+		task.wait()
+	end
+end)
+
+-- ================= CATEGORY BUTTONS (Emoji) =================
+local emojis = {
+	["😻"]=flyFrame,
+	["💩"]=noclipFrame,
+	["✨"]=xrayFrame,
+	["卍"]=manjiFrame,
+	["⬆️"]=jumpFrame
+}
+
+local xPos = 0.02
+for em,frame in pairs(emojis) do
+	local b = Instance.new("TextButton", main)
+	b.Size = UDim2.fromScale(0.12,0.08)
+	b.Position = UDim2.fromScale(xPos,0.08)
+	b.Text = em
+	b.TextScaled = true
+	if em=="卍" then b.TextColor3 = Color3.fromRGB(0,170,255) end
+	b.BackgroundColor3 = Color3.fromRGB(30,30,30)
+	b.MouseButton1Click:Connect(function()
+		if em=="卍" then
+			manjiFrame.Visible = not manjiFrame.Visible
+		else
+			showFrame(frame)
+		end
+	end)
+	xPos = xPos + 0.14
+end
+
+-- ================= FLY =================
+local fly = false
+local bv
+local speed = 60
+local up,down = false,false
+
+local flyBtn = makeBtn("FLY : OFF",flyFrame,UDim2.fromScale(0.1,0))
+flyBtn.MouseButton1Click:Connect(function()
+	fly = not fly
+	flyBtn.Text = fly and "FLY : ON" or "FLY : OFF"
+	if fly then
+		bv = Instance.new("BodyVelocity")
+		bv.MaxForce = Vector3.new(9e9,9e9,9e9)
+		bv.Parent = char().HumanoidRootPart
+	else
+		if bv then bv:Destroy() end
+	end
+end)
+
+local upBtn = makeBtn("UP",flyFrame,UDim2.fromScale(0.1,0.15))
+local downBtn = makeBtn("DOWN",flyFrame,UDim2.fromScale(0.1,0.3))
+upBtn.MouseButton1Down:Connect(function() up=true end)
+upBtn.MouseButton1Up:Connect(function() up=false end)
+downBtn.MouseButton1Down:Connect(function() down=true end)
+downBtn.MouseButton1Up:Connect(function() down=false end)
+
+-- ================= NOCLIP =================
+local noclip = false
+local noclipBtn = makeBtn("NOCLIP : OFF",noclipFrame,UDim2.fromScale(0.1,0))
+noclipBtn.MouseButton1Click:Connect(function()
+	noclip = not noclip
+	noclipBtn.Text = noclip and "NOCLIP : ON" or "NOCLIP : OFF"
+end)
+
+-- ================= INFINITY JUMP =================
+local jumpBtn = makeBtn("JUMP",jumpFrame,UDim2.fromScale(0.1,0))
+jumpBtn.MouseButton1Click:Connect(function()
+	local h = char():FindFirstChild("Humanoid")
+	if h then h:ChangeState(Enum.HumanoidStateType.Jumping) end
+end)
+
+UIS.JumpRequest:Connect(function()
+	local h = char():FindFirstChild("Humanoid")
+	if h then h:ChangeState(Enum.HumanoidStateType.Jumping) end
+end)
+
+-- ================= X-RAY =================
+local xray = false
+local saved = {}
+local xrayBtn = makeBtn("X-RAY : OFF",xrayFrame,UDim2.fromScale(0.1,0))
+xrayBtn.MouseButton1Click:Connect(function()
+	xray = not xray
+	xrayBtn.Text = xray and "X-RAY : ON" or "X-RAY : OFF"
+	for _,v in ipairs(workspace:GetDescendants()) do
+		if v:IsA("BasePart") and not v:IsDescendantOf(char()) then
+			if xray then
+				saved[v] = v.Transparency
+				v.Transparency = 0.7
+			else
+				if saved[v] then v.Transparency = saved[v] end
+			end
+		end
+	end
+end)
+
+-- ================= KEYS =================
+UIS.InputBegan:Connect(function(i,gp)
+	if gp then return end
+	if i.KeyCode==Enum.KeyCode.F then main.Visible = not main.Visible end
+	if i.KeyCode==Enum.KeyCode.G then flyBtn:Activate() end
+	if i.KeyCode==Enum.KeyCode.X then xrayBtn:Activate() end
+	if i.KeyCode==Enum.KeyCode.N then noclipBtn:Activate() end
+	if i.KeyCode==Enum.KeyCode.Space then up=true end
+	if i.KeyCode==Enum.KeyCode.LeftControl then down=true end
+end)
+
+UIS.InputEnded:Connect(function(i)
+	if i.KeyCode==Enum.KeyCode.Space then up=false end
+	if i.KeyCode==Enum.KeyCode.LeftControl then down=false end
+end)
+
+-- ================= RENDER =================
+RunService.RenderStepped:Connect(function()
+	local h = char():FindFirstChild("Humanoid")
+	if fly and bv and h then
+		local move = h.MoveDirection
+		local y = 0
+		if up then y=speed end
+		if down then y=-speed end
+		bv.Velocity = Vector3.new(move.X*speed,y,move.Z*speed)
+	end
+	if noclip then
+		for _,v in pairs(char():GetDescendants()) do
+			if v:IsA("BasePart") then v.CanCollide=false end
+		end
+	end
+end)
+
+print("FVDEHUB MOBILE FULL - Blue 卍 Toggle FIXED LOADED")
